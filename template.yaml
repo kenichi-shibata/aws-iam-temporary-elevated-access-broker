@@ -182,7 +182,7 @@ Resources:
     Type: 'AWS::S3::Bucket'
     DeletionPolicy: Retain
     Properties:
-      BucketName: !Sub '${AWS::Region}-${AWS::AccountId}-cf-static-resources'
+      BucketName: !Sub 'aws-broker-${AWS::Region}-${AWS::AccountId}-cf-01'
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
@@ -280,9 +280,9 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
           TargetOriginId: Bucket
           ResponseHeadersPolicyId: !Ref CloudFrontResourceHeadersPolicy
-          LambdaFunctionAssociations:
-            - EventType: origin-response
-              LambdaFunctionARN: !Ref OriginResponseLambdaFunctionVersion
+          # LambdaFunctionAssociations:
+          #   - EventType: origin-response
+          #     LambdaFunctionARN: !Ref OriginResponseLambdaFunctionVersion
         CacheBehaviors:
         - TargetOriginId: APIGW
           CachePolicyId: !Ref APICloudFrontCachePolicy
@@ -344,7 +344,7 @@ Resources:
               - '*'
           AccessControlMaxAgeSec: 600
           OriginOverride: true
-  LambdaEdgeFunctionRole:
+  LambdaRegionalFunctionRole:
     Type: "AWS::IAM::Role"
     Properties:
         Path: "/"
@@ -362,12 +362,11 @@ Resources:
               Principal:
                 Service: 
                   - "lambda.amazonaws.com"
-                  - "edgelambda.amazonaws.com"
   OriginResponseLambdaFunctionVersion:
     Type: AWS::Lambda::Version
     Properties:
       FunctionName: !Ref OriginResponseLambdaFunction
-      Description: !Sub "Version published for Lambda@Edge"
+      Description: !Sub "Version published for Lambda"
   DynamoDBUpdatePolicy:
     Type: 'AWS::IAM::ManagedPolicy'
     Properties:
@@ -666,7 +665,7 @@ Resources:
       FunctionName: !Sub '${AWS::StackName}-cf_origin_response'
       MemorySize: 128
       Timeout: 5
-      Role: !Sub ${LambdaEdgeFunctionRole.Arn}
+      Role: !Sub ${LambdaRegionalFunctionRole.Arn}
       Runtime: nodejs14.x
       TracingConfig:
         Mode: Active
